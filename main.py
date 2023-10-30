@@ -141,7 +141,7 @@ def main(args):
         
         ## Validate model perform over the test
         valid_loss, valid_accuracy, valid_time = evalute(model, criterion, 
-                                                     valid_loader, device, 
+                                                     test_loader, device, 
                                                      args)
         valid_losses.append(valid_loss)
         valid_acc.append(valid_accuracy)
