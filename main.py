@@ -155,7 +155,7 @@ def main(args):
             best_valid_acc = valid_accuracy
             best_weights = model.state_dict()
             # After training for an epoch, save the model checkpoint
-            model_checkpoint_path = f'{checkpoint}/model_epoch_{epoch + 1}_{valid_acc:.2f}.pth'
+            model_checkpoint_path = f'{checkpoint}/model_epoch_{epoch + 1}_{valid_accuracy:.2f}.pth'
             torch.save(model.state_dict(), model_checkpoint_path)
             print(f"Model checkpoint saved for epoch {epoch + 1} at {model_checkpoint_path}")
             
