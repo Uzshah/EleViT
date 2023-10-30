@@ -107,9 +107,9 @@ def main(args):
         criterion = CrossEntropyLoss()
     
     create_folder(args.output_dir)
-    
+    create_folder(args.output_dir+'/'+args.dataset)
     ## Create Model specific folder
-    checkpoint = args.output_dir+'/'+args.model
+    checkpoint = args.output_dir+'/'+args.dataset+'/'+args.model
     create_folder(checkpoint)
     
     ## Save model 
@@ -133,8 +133,7 @@ def main(args):
         train_losses.append(train_loss)
         train_acc.append(train_accuracy)
         
-        text = f'Epoch [{epoch}/{args.epochs}], training loss: {train_loss:.4f}, \
-        training accuracy: {train_acc:.2f}, Total time: {epoch_time:.2f}'
+        text = f'Epoch [{epoch}/{args.epochs}], training loss: {train_loss:.4f}, training accuracy: {train_accuracy:.2f}, Total time: {epoch_time:.2f}'
         print(text)
         file.write(text)
         file.write('\n')
@@ -146,8 +145,7 @@ def main(args):
                                                      args)
         valid_losses.append(valid_loss)
         valid_acc.append(valid_accuracy)
-        text = f'validation loss: {valid_loss:.4f}, \
-        validation accuracy: {valid_acc:.2f}, Total time: {valid_time:.2f}'
+        text = f'validation loss: {valid_loss:.4f}, validation accuracy: {valid_accuracy:.2f}, Total time: {valid_time:.2f}'
         print(text)
         file.write(text)
         file.write('\n')
@@ -157,11 +155,9 @@ def main(args):
             best_valid_acc = valid_acc
             best_weights = model.state_dict()
             # After training for an epoch, save the model checkpoint
-            model_checkpoint_path = f'{checkpoint}/model_epoch_ \
-            {epoch + 1}_{valid_acc:.2f}.pth'
+            model_checkpoint_path = f'{checkpoint}/model_epoch_{epoch + 1}_{valid_acc:.2f}.pth'
             torch.save(model.state_dict(), model_checkpoint_path)
-            print(f"Model checkpoint saved for epoch {epoch + 1} \
-            at {model_checkpoint_path}")
+            print(f"Model checkpoint saved for epoch {epoch + 1} at {model_checkpoint_path}")
             
     print(f"Best validation accuracy is {best_valid_acc}")
     file.close()
@@ -174,28 +170,3 @@ if __name__ == '__main__':
         'EleViT training and evaluation script', parents=[get_args_parser()])
     args = parser.parse_args()
     main(args)
-    
-    
-    
-    
-        
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
