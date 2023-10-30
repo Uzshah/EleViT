@@ -151,8 +151,8 @@ def main(args):
         file.write('\n')
         
         ## check model performance if model improve and write new checkpoint
-        if valid_acc > best_valid_acc:
-            best_valid_acc = valid_acc
+        if valid_accuracy > best_valid_acc:
+            best_valid_acc = valid_accuracy
             best_weights = model.state_dict()
             # After training for an epoch, save the model checkpoint
             model_checkpoint_path = f'{checkpoint}/model_epoch_{epoch + 1}_{valid_acc:.2f}.pth'
