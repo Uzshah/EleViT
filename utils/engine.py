@@ -17,7 +17,7 @@ def train_one_epoch(model, criterion, optimizer, scheduler, train_loader, device
         # Forward pass
         outputs = model(images)
         
-        if args.model != 'EleViT_L':
+        if args.model == 'SwiftFormer_L3':
             outputs = outputs[0]
         loss = criterion(outputs, labels)
 
@@ -58,8 +58,6 @@ def evalute(model, criterion, valid_loader, device, args):
 
             # Forward pass
             outputs = model(images)
-            if args.model == 'EfficientFormer':
-                outputs = outputs[0]
             loss = criterion(outputs, labels)
             valid_loss += loss.item()
             _, predicted = torch.max(outputs.data, 1)
