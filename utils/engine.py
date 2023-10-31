@@ -17,7 +17,7 @@ def train_one_epoch(model, criterion, optimizer, scheduler, train_loader, device
         # Forward pass
         outputs = model(images)
         
-        if args.model == 'SwiftFormer_L3':
+        if args.model == 'SwiftFormer_L3' or args.model == 'efficientformerv2_l':
             outputs = outputs[0]
         loss = criterion(outputs, labels)
 
