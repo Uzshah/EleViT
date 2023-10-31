@@ -4,7 +4,7 @@ from torchvision.transforms import ToTensor
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 import numpy as np
-import utils
+from .utils import TinyImageNetDataset
 import torch
 
 class Cutout:
@@ -47,10 +47,10 @@ def build_dataset(args):
         return (train_dataset, test_dataset, num_classes)
     elif args.dataset == 'TinyImagenet':
         # Load TinyImagenet dataset
-        train_dataset = utils.TinyImageNetDataset(root_dir = "TinyImagenet", mode='train', 
+        train_dataset = TinyImageNetDataset(root_dir = "utils/TinyImagenet", mode='train', 
                                        preload=False, load_transform=None,transform=train_transform)
 
-        val_dataset = utils.TinyImageNetDataset(root_dir = "TinyImagenet", mode='val', 
+        test_dataset = TinyImageNetDataset(root_dir = "utils/TinyImagenet", mode='val', 
                                     preload=False, load_transform=None,transform= valid_transform)
         num_classes = 200
         return (train_dataset, test_dataset, num_classes)
