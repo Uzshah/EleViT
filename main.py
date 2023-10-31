@@ -142,7 +142,7 @@ def main(args):
         train_losses.append(train_loss)
         train_acc.append(train_accuracy)
         print()
-        text = f'Epoch [{epoch}/{args.epochs}], training loss: {train_loss:.4f}, training accuracy: {train_accuracy:.2f}, Total time: {epoch_time:.2f}'
+        text = f'Epoch [{epoch+1}/{args.epochs}], training loss: {train_loss:.4f}, training accuracy: {train_accuracy:.2f}, Total time: {epoch_time:.2f}'
         print(text)
         file.write(text)
         file.write('\n')
