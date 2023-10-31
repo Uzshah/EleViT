@@ -58,7 +58,7 @@ def evalute(model, criterion, valid_loader, device, args):
 
             # Forward pass
             outputs = model(images)
-            if args.model == 'SwiftFormer_L3' or args.model == 'EfficientFormer':
+            if args.model == 'EfficientFormer':
                 outputs = outputs[0]
             loss = criterion(outputs, labels)
             valid_loss += loss.item()
