@@ -127,7 +127,7 @@ def main(args):
         model.load_state_dict(checkpoint['model'])
         if 'optimizer' in checkpoint and 'lr_scheduler' in checkpoint and 'epoch' in checkpoint:
             optimizer.load_state_dict(checkpoint['optimizer'])
-            lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+            scheduler.load_state_dict(checkpoint['scheduler'])
             args.start_epoch = checkpoint['epoch'] + 1
         
     print("Training Start ....\n")
@@ -168,7 +168,7 @@ def main(args):
             torch.save({
                 'model': model.state_dict(),
                 'optimizer': optimizer.state_dict(),
-                'lr_scheduler': lr_scheduler.state_dict(),
+                'scheduler': scheduler.state_dict(),
                 'epoch': epoch,
                 'args': args,},
                 model_checkpoint_path)
