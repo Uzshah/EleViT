@@ -59,7 +59,9 @@ def get_args_parser():
     parser.add_argument('--dataset', default='CIFAR100', choices=['CIFAR100', 'CIFAR10', 'TinyImagenet'],
                         type=str, help='Image Net dataset path')
     
-
+    parser.add_argument('--resume', default='', help='resume from checkpoint')
+    parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
+                        help='start epoch')
     parser.add_argument('--output_dir', default='check_points',
                         help='path where to save, empty for no saving')
     parser.add_argument('--device', default='cuda',
@@ -120,12 +122,19 @@ def main(args):
     best_weights = None
     train_losses, valid_losses = [], []
     train_acc, valid_acc = [], []
-    
+    if args.resume:
+        checkpoint = torch.load(arg.resume)
+        model.load_state_dict(checkpoint['model'])
+        if 'optimizer' in checkpoint and 'lr_scheduler' in checkpoint and 'epoch' in checkpoint:
+            optimizer.load_state_dict(checkpoint['optimizer'])
+            lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+            args.start_epoch = checkpoint['epoch'] + 1
+        
     print("Training Start ....\n")
     
     file = open(f"{checkpoint}/log.txt", "w") 
 
-    for epoch in range(args.epochs):
+    for epoch in range(args.start_epoch, args.epochs):
         train_loss, train_accuracy, epoch_time = train_one_epoch(model, criterion,
                                                             optimizer, scheduler,
                                                             train_loader, device,
@@ -155,7 +164,7 @@ def main(args):
             best_valid_acc = valid_accuracy
             best_weights = model.state_dict()
             # After training for an epoch, save the model checkpoint
-            model_checkpoint_path = f'{checkpoint}/{args.model}.pth'
+            model_checkpoint_path = f'{checkpoint}/{args.model}_state.pth'
             torch.save({
                 'model': model.state_dict(),
                 'optimizer': optimizer.state_dict(),
