@@ -125,7 +125,7 @@ def main(args):
     if args.resume:
         checkpoint = torch.load(arg.resume)
         model.load_state_dict(checkpoint['model'])
-        if 'optimizer' in checkpoint and 'lr_scheduler' in checkpoint and 'epoch' in checkpoint:
+        if 'optimizer' in checkpoint and 'scheduler' in checkpoint and 'epoch' in checkpoint:
             optimizer.load_state_dict(checkpoint['optimizer'])
             scheduler.load_state_dict(checkpoint['scheduler'])
             args.start_epoch = checkpoint['epoch'] + 1
