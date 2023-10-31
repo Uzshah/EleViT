@@ -123,14 +123,14 @@ def main(args):
     train_losses, valid_losses = [], []
     train_acc, valid_acc = [], []
     if args.resume:
-        checkpoint = torch.load(arg.resume)
-        model.load_state_dict(checkpoint['model'])
-        if 'optimizer' in checkpoint and 'scheduler' in checkpoint and 'epoch' in checkpoint:
-            optimizer.load_state_dict(checkpoint['optimizer'])
-            scheduler.load_state_dict(checkpoint['scheduler'])
-            args.start_epoch = checkpoint['epoch'] + 1
+        check_point = torch.load(args.resume)
+        model.load_state_dict(check_point['model'])
+        if 'optimizer' in check_point and 'scheduler' in check_point and 'epoch' in check_point:
+            optimizer.load_state_dict(check_point['optimizer'])
+            scheduler.load_state_dict(check_point['scheduler'])
+            args.start_epoch = check_point['epoch'] + 1
         
-    print("Training Start ....\n")
+    print(f"Training Start from epochs {args.start_epoch}....\n")
     
     file = open(f"{checkpoint}/log.txt", "w") 
 
@@ -142,7 +142,7 @@ def main(args):
         train_losses.append(train_loss)
         train_acc.append(train_accuracy)
         print()
-        text = f'Epoch [{epoch+1}/{args.epochs}], training loss: {train_loss:.4f}, training accuracy: {train_accuracy:.2f}, Total time: {epoch_time:.2f}'
+        text = f'Epoch [{epoch}/{args.epochs}], training loss: {train_loss:.4f}, training accuracy: {train_accuracy:.2f}, Total time: {epoch_time:.2f}'
         print(text)
         file.write(text)
         file.write('\n')
