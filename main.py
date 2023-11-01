@@ -64,6 +64,8 @@ def get_args_parser():
                         help='start epoch')
     parser.add_argument('--output_dir', default='check_points',
                         help='path where to save, empty for no saving')
+    parser.add_argument('--eval', default='',
+                        help='path from where to load')
     parser.add_argument('--device', default='cuda',
                         help='device to use for training / testing')
     parser.add_argument('--seed', default=0, type=int)
@@ -107,7 +109,16 @@ def main(args):
         # train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
         criterion = CrossEntropyLoss()
-    
+        
+    ## Model evaluation     
+    if args.eval:
+        eval_check_point = torch.load(args.eval)
+        model.load_state_dict(eval_check_point['model'])
+        valid_loss, valid_accuracy, valid_time = evalute(model, criterion, 
+                                                     test_loader, device, 
+                                                     args)
+        print(f"validation loss: {valid_loss:.4f}, validation accuracy: {valid_accuracy:.2f}, Total time: {valid_time:.2f}")
+        return 
     create_folder(args.output_dir)
     create_folder(args.output_dir+'/'+args.dataset)
     ## Create Model specific folder
@@ -158,15 +169,7 @@ def main(args):
         print(text)
         file.write(text)
         file.write('\n')
-
-        last_checkpoint_path = f'{checkpoint}/last.pth'
-        torch.save({
-            'model': model.state_dict(),
-            'optimizer': optimizer.state_dict(),
-            'scheduler': scheduler.state_dict(),
-            'epoch': epoch,
-            'args': args, },
-            last_checkpoint_path)
+        
         ## check model performance if model improve and write new checkpoint
         if valid_accuracy > best_valid_acc:
             best_valid_acc = valid_accuracy
