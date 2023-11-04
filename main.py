@@ -11,6 +11,16 @@ from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
 from cutmix.cutmix import CutMix
 from cutmix.utils import CutMixCrossEntropyLoss
+import os
+import random
+import string
+
+def generate_random_name(length=4):
+    syllables = ['ba', 'do', 'fi', 'ja', 'lo', 'ma', 'ne', 'pi', 'ro', 'ta']
+    random_name = ''.join(random.choice(syllables) for _ in range(length))
+    return random_name
+
+
 
 
 def create_folder(folder_path):
@@ -124,7 +134,13 @@ def main(args):
     ## Create Model specific folder
     checkpoint = args.output_dir+'/'+args.dataset+'/'+args.model
     create_folder(checkpoint)
-    
+    if any(os.listdir(checkpoint)):
+        source_folder = checkpoint
+        backup_folder = f"{checkpoint}_backup_{generate_random_name()}"
+
+        # Create a backup of the source folder
+        shutil.copytree(source_folder, backup_folder)
+        print(f"Backup is saved in {backup_folder}")
     ## Save model 
     torch.save(model, f'{checkpoint}/{args.model}.pth')
     
