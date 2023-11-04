@@ -14,6 +14,8 @@ from cutmix.utils import CutMixCrossEntropyLoss
 import os
 import random
 import string
+import shutil
+
 
 def generate_random_name(length=4):
     syllables = ['ba', 'do', 'fi', 'ja', 'lo', 'ma', 'ne', 'pi', 'ro', 'ta']
