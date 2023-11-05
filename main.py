@@ -187,7 +187,14 @@ def main(args):
         print(text)
         file.write(text)
         file.write('\n')
-        
+        model_checkpoint_path = f'{checkpoint}/last.pth'
+        torch.save({
+                'model': model.state_dict(),
+                'optimizer': optimizer.state_dict(),
+                'scheduler': scheduler.state_dict(),
+                'epoch': epoch,
+                'args': args,},
+                model_checkpoint_path)
         ## check model performance if model improve and write new checkpoint
         if valid_accuracy > best_valid_acc:
             best_valid_acc = valid_accuracy
