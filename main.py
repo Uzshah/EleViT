@@ -82,46 +82,89 @@ def get_args_parser():
                         help='device to use for training / testing')
     parser.add_argument('--seed', default=0, type=int)
     
+    parser.add_argument('--dist-eval', action='store_true',
+                        default=False, help='Enabling distributed evaluation')
+    parser.add_argument('--num_workers', default=10, type=int)
+    parser.add_argument('--pin-mem', action='store_true',
+                        help='Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.')
+    parser.add_argument('--no-pin-mem', action='store_false', dest='pin_mem',
+                        help='')
+    parser.set_defaults(pin_mem=True)
+    
+    # distributed training parameters
+    parser.add_argument('--world_size', default=1, type=int,
+                        help='number of distributed processes')
+    parser.add_argument('--dist_url', default='env://',
+                        help='url used to set up distributed training')
     return parser
     
 def main(args):
+    utils.init_distributed_mode(args)
     print(args)
     device = torch.device(args.device)
-    # fix the seed for reproducibility
-    seed = args.seed
+    # Fix the seed for reproducibility
+    seed = args.seed + utils.get_rank()
     torch.manual_seed(seed)
     np.random.seed(seed)
 
     cudnn.benchmark = True
     train_dataset, test_dataset, args.num_classes = build_dataset(args)
     
+    num_tasks = utils.get_world_size()
+    global_rank = utils.get_rank()
+    
+    sampler_train = torch.utils.data.DistributedSampler(
+            train_dataset, num_replicas=num_tasks, rank=global_rank, shuffle=True
+        )
+    sampler_test = torch.utils.data.DistributedSampler(
+            test_dataset, num_replicas=num_tasks, rank=global_rank, shuffle=True
+        )
     ## Model calling
     model = eval(args.model)(num_classes = args.num_classes)
     model.to(device)
     
     total_params = sum(p.numel() for p in model.parameters())
     print(f"Total number of parameters: {total_params}")
-    ## optimizer calling
-    optimizer = eval(args.opt)(model.parameters(), lr = args.lr)
     
-    ## schedular
-    scheduler = eval(args.sched)(optimizer, T_max = args.epochs)
     #print(f'scheduler {scheduler}')
     ## Loss
     if args.cutmix:
         # Create data loaders for training and validation
         train_loader = DataLoader(CutMix(train_dataset, args.num_classes,
-                       beta=1.0, prob=0.5, num_mix=2), batch_size=args.batch_size, shuffle=True)
+                       beta=1.0, prob=0.5, num_mix=2), batch_size=args.batch_size, 
+                       sampler=sampler_train, num_workers=args.num_workers,
+        pin_memory=args.pin_mem,
+        drop_last=True,)
         # train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-        test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+        test_loader = DataLoader(test_dataset, batch_size=args.batch_size,
+         sampler=sampler_test, num_workers=args.num_workers,
+        pin_memory=args.pin_mem,
+        drop_last=True,)
         criterion = CutMixCrossEntropyLoss(True).to(device)
     else:
         # Create data loaders for training and validation
-        train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+        train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
+         sampler=sampler_train, num_workers=args.num_workers,
+        pin_memory=args.pin_mem,
+        drop_last=True,)
         # train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-        test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+        test_loader = DataLoader(test_dataset, batch_size=args.batch_size,
+         sampler=sampler_test, num_workers=args.num_workers,
+        pin_memory=args.pin_mem,
+        drop_last=True,)
         criterion = CrossEntropyLoss()
         
+    model_without_ddp = model
+    if args.distributed:
+        model = torch.nn.parallel.DistributedDataParallel(
+            model, device_ids=[args.gpu])
+        model_without_ddp = model.module   
+        
+    ## optimizer calling
+    optimizer = eval(args.opt)(model_without_ddp.parameters(), lr = args.lr)
+    
+    ## schedular
+    scheduler = eval(args.sched)(optimizer, T_max = args.epochs)     
     ## Model evaluation     
     if args.eval:
         eval_check_point = torch.load(args.eval)
