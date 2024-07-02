@@ -41,15 +41,14 @@ class MultiheadAttention(nn.Module):
         self.apply(self._init_weights)
         self.scale = math.sqrt(self.head_dim)
         self.soft = nn.Softmax(dim = -1)
-        self.bn = nn.BatchNorm2d(out_channels)
-        #self.talking_head1 = nn.Conv2d(self.head_dim, self.head_dim, kernel_size=1, stride= 1, padding=0)
-        #self.talking_head2 = nn.Conv2d(self.head_dim, self.head_dim, kernel_size=1, stride=1, padding=0)
-        #self.gamma = nn.Parameter(torch.zeros(1))
-        #self.attention_bias = nn.Parameter(torch.zeros(self.head_dim))
         self.focusing_factor = nn.Parameter(torch.zeros(1))
-        self.act = nn.GELU()
         self.drop = nn.Dropout(drop_out) if drop_out> 0 else nn.Identity()
-        
+        self.proj = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size, 
+                          1, padding, bias=bias, dilation=dilation_rate),
+                nn.GELU(),
+                nn.BatchNorm2d(out_channels)
+            )
         
   
     def _init_weights(self, m):
@@ -62,18 +61,12 @@ class MultiheadAttention(nn.Module):
     def forward(self, x):
         qkv = self.qkv_conv(x)
         q, k, v = torch.chunk(qkv, 3, dim=1)
-        q, k, v = map(lambda t: rearrange(t, 'b (c h) w j -> (b h) c w j', h = self.num_heads),(q, k, v))
-        scores = torch.einsum('b c w j,b c j k->b c w k', q, k.transpose(-1, -2))/self.scale
-        # Add the parameterized attention bias term here
-        #scores += self.attention_bias.view(1, self.head_dim, 1, 1)
-        #scores = self.talking_head1(scores)
+        scores =  (q*k.transpose(-1, -2))/self.scale
         attention_weights = self.soft(scores)
-        #attention_weights = self.talking_head2(attention_weights)
-        multihead_output = torch.einsum('b c w j,b c w j->b c w j', attention_weights*self.focusing_factor, v)
-        out = rearrange(multihead_output, '(b h) c w j -> b (c h) w j', h = self.num_heads)
+        out =  (attention_weights*self.focusing_factor *v)
         out = self.drop(out)
-        out = self.act(out)
-        return self.bn(out)
+        out = self.proj(out)
+        return out
 
 
 class ConvEncoder(nn.Module):
